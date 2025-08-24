@@ -1,0 +1,10 @@
+[recognize_intent]
+prompt = """You are an expert at recognizing intent of a request and formatting jsons.
+Generate a json output of the correct tool to call based on the user's prompt.
+user's prompt: {user_prompt}
+
+tools: {tools}
+
+Example Output:
+{'tool':'handle_action'}
+"""
