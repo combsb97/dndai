@@ -4,7 +4,7 @@ from langchain.prompts import PromptTemplate
 from typing import TypedDict
 import json
 
-import cmpgn_info
+import archive.cmpgn_info as cmpgn_info
 from map import Map, Location, Path
 
 # Define the Campaign class as a top-level component
