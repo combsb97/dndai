@@ -2,20 +2,43 @@ import random
 import winsound
 import yaml
 import json
+import os
+from datetime import datetime
 from termcolor import colored
-from typing import TypedDict, List, Annotated, Dict
+from typing import TypedDict, List, Annotated, Dict, Any
 import operator
 import torch
 import torchaudio as ta
 from chatterbox.tts import ChatterboxTTS
 import langchain
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 from langgraph.graph import StateGraph, START, END
-from game_state import gamestate
+# from game_state import gamestate  # Will be replaced by GameStateManager
+from RemoteOllama import llm
+from RemoteChatterboxTTS import tts_client
 
 langchain.verbose = True
+
+# --- LLM Configuration ---
+LLM_CONFIG = {
+    "provider": "ollama",#"gemini",  # Options: "gemini", "ollama"
+    "gemini_model": "gemini-2.5-flash",
+    "ollama_model": "mistral",
+    "ollama_url": "http://192.168.0.18:11434",
+    "ollama_temperature": 0.7,
+    "ollama_keep_alive": 0
+}
+
+def get_llm():
+    if LLM_CONFIG["provider"] == "gemini":
+        return ChatGoogleGenerativeAI(model=LLM_CONFIG["gemini_model"])
+    elif LLM_CONFIG["provider"] == "ollama":
+        return llm
+    else:
+        raise ValueError(f"Unknown LLM provider: {LLM_CONFIG['provider']}")
 
 # --- 1. Agent State Definition ---
 # This class defines the "state" that is passed between all the nodes in our graph.
@@ -41,12 +64,13 @@ def interpret_user_intent(player_input: str) -> str:
         print(f"Error loading prompts.yaml: {e}")
         return "Error"
     
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "## Raw User Input: {user_input}"),
     ])
 
-    LLM = ChatOllama(base_url="http://localhost:11434", model="mistral", temperature=0.7, keep_alive=0)
+    LLM = get_llm()
     output_parser = JsonOutputParser()
     chain = prompt | LLM | output_parser
 
@@ -71,12 +95,13 @@ def interpret_player_input(player_input: str, invalid_events: List[dict]) -> str
         print(f"Error loading prompts.yaml: {e}")
         return "Error"
     
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "## Parsed User Input:{user_input}"),
     ])
 
-    LLM = ChatOllama(base_url="http://localhost:11434", model="mistral", temperature=0.7, keep_alive=0)
+    LLM = get_llm()
     output_parser = JsonOutputParser()
     chain = prompt | LLM | output_parser
 
@@ -232,12 +257,13 @@ def generate_narrative(user_input: str, validated_plan: List[dict], execution_re
         print(f"Error loading prompts.yaml: {e}")
         return "Error"
     
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "{user_input}")
     ])
 
-    LLM = ChatOllama(base_url="http://localhost:11434", model="llama3.1:8b", temperature=0.7, keep_alive=0)
+    LLM = get_llm()
     output_parser = JsonOutputParser()
     chain = prompt | LLM | output_parser
 
@@ -269,13 +295,13 @@ def validate_narrative(narrative: dict) -> dict:
         print(f"Error loading prompts.yaml: {e}")
         return {"Error": "Failed to load prompts."}
 
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("user", "{narrative}")
     ])
 
-    LLM = ChatOllama(base_url="http://localhost:11434", model="llama3.1:8b", temperature=0.7, keep_alive=0)
-
+    LLM = get_llm()
     output_parser = JsonOutputParser()
     chain = prompt | LLM | output_parser
 
@@ -289,18 +315,22 @@ def validate_narrative(narrative: dict) -> dict:
         print(f"An error occurred during narrative validation: {e}")
         return {"Error": "Failed to validate narrative."}
 
+# def generate_narrative_audio(narrative: str):
+#     AUDIO_PROMPT_PATH = "resources/bg3narrator.wav"
+#     model = ChatterboxTTS.from_pretrained(device="cpu")
+#     try:
+#         audio = model.generate(narrative, audio_prompt_path=AUDIO_PROMPT_PATH)
+#     except Exception as e:
+#         print(f"Error generating audio: {e}")
+#         return
+#     # Save to a file
+#     ta.save("./response.wav", audio, model.sr, encoding="PCM_S", bits_per_sample=16)
+#     del model
+#     # torch.cpu.empty_cache()
+
 def generate_narrative_audio(narrative: str):
-    AUDIO_PROMPT_PATH = "resources/bg3narrator.wav"
-    model = ChatterboxTTS.from_pretrained(device="cuda")
-    try:
-        audio = model.generate(narrative, audio_prompt_path=AUDIO_PROMPT_PATH)
-    except Exception as e:
-        print(f"Error generating audio: {e}")
-        return
-    # Save to a file
-    ta.save("./response.wav", audio, model.sr, encoding="PCM_S", bits_per_sample=16)
-    del model
-    torch.cuda.empty_cache()
+    tts_client.speak(narrative, output_file="./response.wav")
+    return
 
 def play_narrative_audio():
     AUDIO_FILE_PATH = "./response.wav"
@@ -309,8 +339,8 @@ def play_narrative_audio():
 
 def main():
     # Update only relevant fields in the session
-    gamestate.set_session_location_by_key("loc_Havenwood")
-    gamestate.set_current_actors_by_location_id("loc_Havenwood")
+    # Example: set current scene (loads scene data into memory)
+    gamestate.set_scene("Havenwood")
     
     messages = []  # <-- Track message history here
 
@@ -361,18 +391,18 @@ def main():
             print(f"Error generating narrative: {e}")
             return
         
-        # try:
-        #     generate_narrative_audio(narrative.get("narrative", ""))
-        #     play_narrative_audio()
-        # except Exception as e:
-        #     print(f"Error with narrative audio: {e}")
-        #     return
+        try:
+            generate_narrative_audio(narrative.get("narrative", ""))
+            play_narrative_audio()
+        except Exception as e:
+            print(f"Error with narrative audio: {e}")
+            return
         
-        # try:
-        #     play_narrative_audio()
-        # except Exception as e:
-        #     print(f"Error playing narrative audio: {e}")
-        #     return
+        try:
+            play_narrative_audio()
+        except Exception as e:
+            print(f"Error playing narrative audio: {e}")
+            return
 
         # try:
         #     narrative = validate_narrative(narrative)

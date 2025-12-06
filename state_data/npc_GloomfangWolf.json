@@ -1,0 +1,8 @@
+{
+  "id": "npc_GloomfangWolf",
+  "name": "Gloomfang Wolf",
+  "role": "Hostile Creature",
+  "currentLocation": "loc_Gloomwood",
+  "dispositionToParty": "hostile",
+  "stats": { "hp_current": 11, "hp_max": 11, "ac": 13 }
+}
