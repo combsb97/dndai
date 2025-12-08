@@ -1,0 +1,11 @@
+{
+  "name": "Havenwood Town Square",
+  "description": "The bustling heart of Havenwood, filled with market stalls, townsfolk, and the aroma of fresh bread from the bakery. A large oak tree stands in the center, its branches spreading wide.",
+  "npcs": [
+    "npc_GuardCaptainThorne"
+  ],
+"connections": {
+  "north_path": "loc_Gloomwood",
+  "west_side_town_square": "loc_WearyWandererTavern"
+  }
+}
