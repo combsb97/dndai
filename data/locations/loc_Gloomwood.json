@@ -1,0 +1,9 @@
+{
+  "name": "The Gloomwood",
+  "type": "Forest",
+  "description": "A dark and menacing forest of ancient ironwood trees. Sunlight struggles to pierce the thick canopy, and strange sounds echo from the shadows.",
+  "connections": {
+  "south_path": "loc_HavenwoodTownSquare"
+  },
+  "state": ["dangerous", "unnatural_silence"]
+}

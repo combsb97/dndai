@@ -1,0 +1,20 @@
+{
+    "name": "Elara",
+    "class": "Rogue",
+    "race": "Human",
+    "background": "Outlander",
+    "stats": {
+      "hp_current": 22,
+      "hp_max": 22,
+      "ac": 14,
+      "str": 10,
+      "dex": 17,
+      "con": 12,
+      "int": 14,
+      "wis": 11,
+      "cha": 13
+    },
+    "inventory": ["item_Shortsword", "item_LeatherArmor", "item_ThievesTools", "item_MapFragment"],
+    "statusEffects": [],
+    "personalGoals": ["Discover the meaning of the symbols on the strange map fragment."]
+  }

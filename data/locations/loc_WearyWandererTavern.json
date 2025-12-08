@@ -1,0 +1,10 @@
+{
+  "name": "WearyWandererTavern",
+  "description": "A cozy tavern filled with the warm glow of a roaring fireplace. The scent of roasted meat and fresh ale fills the air. Patrons laugh and share stories at wooden tables, while a bard strums a lute in the corner.",
+  "npcs": [
+    "npc_BoricTheBarkeep"
+  ],
+  "connections": {
+  "front_door": "loc_HavenwoodTownSquare"
+  }
+}
